@@ -31,16 +31,9 @@ public class PessoaService {
 	@Transactional
 	public PessoaDTO insert(PessoaDTO dto) {
 		Pessoa entity = new Pessoa();
-		entity.setNome(dto.getNome());
-		entity.setSobrenome(dto.getSobrenome());
-		
 		Carro carro = new Carro();
-		carro.setNome(dto.getCarro().getNome());
-		carro.setModelo(dto.getCarro().getModelo());
-		carro.setPessoa(entity);
-		carroRepository.save(carro);
-		
-		entity.setCarro(carro);
+		copiaEntidade(entity, carro, dto);
+
 		entity = repository.save(entity);
 		return new PessoaDTO(entity);
 	}
@@ -49,18 +42,9 @@ public class PessoaService {
 	public PessoaDTO update(Long id, PessoaDTO dto) {
 		try {
 			Pessoa entity = repository.getById(id);
-			entity.setNome(dto.getNome());
-			entity.setSobrenome(dto.getSobrenome());
-			
-			
 			Carro carro = carroRepository.getById(dto.getCarro().getId());
-			carro.setNome(dto.getCarro().getNome());
-			carro.setModelo(dto.getCarro().getModelo());
-			carro.setPessoa(entity);
-			carroRepository.save(carro);
-			
-			
-			entity.setCarro(carro);
+			copiaEntidade(entity, carro, dto);
+
 			entity = repository.save(entity);
 			return new PessoaDTO(entity);
 		} catch (EntityNotFoundException e) {
@@ -84,12 +68,23 @@ public class PessoaService {
 	public void delete(Long id) {
 		try {
 			repository.deleteById(id);
-		} catch (EmptyResultDataAccessException  e) {
+		} catch (EmptyResultDataAccessException e) {
 			throw new ResourceNotFoundException("Pessoa não existe: " + id);
 
 		} catch (DataIntegrityViolationException e) {
 			throw new DatabaseException("Pessoa não existe: " + id);
-
 		}
+	}
+
+	private void copiaEntidade(Pessoa entity, Carro carro, PessoaDTO dto) {
+		entity.setNome(dto.getNome());
+		entity.setSobrenome(dto.getSobrenome());
+
+		carro.setNome(dto.getCarro().getNome());
+		carro.setModelo(dto.getCarro().getModelo());
+		carro.setPessoa(entity);
+		carroRepository.save(carro);
+
+		entity.setCarro(carro);
 	}
 }

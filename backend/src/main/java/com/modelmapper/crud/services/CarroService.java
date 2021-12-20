@@ -31,14 +31,9 @@ public class CarroService {
 	@Transactional
 	public CarroDTO insert(CarroDTO dto) {
 		Carro entity = new Carro();
-		entity.setNome(dto.getNome());
-		entity.setModelo(dto.getModelo());
-		
 		Pessoa pessoa = new Pessoa();
-		pessoa.setCarro(entity);
-		pessoaRepository.save(pessoa);
-		
-		entity.setPessoa(pessoa);
+		copiaEntidades(entity, pessoa, dto);
+
 		entity = repository.save(entity);
 		return new CarroDTO(entity);
 	}
@@ -47,13 +42,9 @@ public class CarroService {
 	public CarroDTO update(Long id, CarroDTO dto) {
 		try {
 			Carro entity = repository.getById(id);
-			entity.setNome(dto.getNome());
-			entity.setModelo(dto.getModelo());
-			
 			Pessoa pessoa = pessoaRepository.getById(dto.getPessoaId());
-			pessoaRepository.save(pessoa);
-			
-			entity.setPessoa(pessoa);
+			copiaEntidades(entity, pessoa, dto);
+
 			entity = repository.save(entity);
 			return new CarroDTO(entity);
 		} catch (EntityNotFoundException e) {
@@ -83,5 +74,14 @@ public class CarroService {
 			throw new DatabaseException("Carro não existe: " + id);
 
 		}
+	}
+
+	private void copiaEntidades(Carro entity, Pessoa pessoa, CarroDTO dto) {
+		entity.setNome(dto.getNome());
+		entity.setModelo(dto.getModelo());
+
+		pessoa.setCarro(entity);
+		pessoaRepository.save(pessoa);
+		entity.setPessoa(pessoa);
 	}
 }
