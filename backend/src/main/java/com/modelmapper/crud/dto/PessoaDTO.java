@@ -21,12 +21,6 @@ public class PessoaDTO implements Serializable{
 	private String sobrenome;
 	private CarroDTO carro;
 	
-//	public PessoaDTO(Pessoa obj) {
-//		id = obj.getId();
-//		nome = obj.getNome();
-//		sobrenome = obj.getSobrenome();
-//	}
-	
 	public PessoaDTO(Pessoa obj) {
 		id = obj.getId();
 		nome = obj.getNome();

@@ -21,12 +21,6 @@ public class CarroDTO implements Serializable{
 	private String modelo;
 	private Long pessoaId;
 	
-//	public CarroDTO(Carro obj) {
-//		this.id = obj.getId();
-//		this.nome = obj.getNome();
-//		this.modelo = obj.getModelo();
-//	}
-	
 	public CarroDTO(Carro obj) {
 		id = obj.getId();
 		nome = obj.getNome();

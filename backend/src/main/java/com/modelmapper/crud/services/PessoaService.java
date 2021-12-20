@@ -33,9 +33,14 @@ public class PessoaService {
 		Pessoa entity = new Pessoa();
 		entity.setNome(dto.getNome());
 		entity.setSobrenome(dto.getSobrenome());
-		//Carro carro = carroRepository.getById(dto.getCarro().getId());
-		//entity.setCarro(carro);
-		//carroRepository.save(carro);
+		
+		Carro carro = new Carro();
+		carro.setNome(dto.getCarro().getNome());
+		carro.setModelo(dto.getCarro().getModelo());
+		carro.setPessoa(entity);
+		carroRepository.save(carro);
+		
+		entity.setCarro(carro);
 		entity = repository.save(entity);
 		return new PessoaDTO(entity);
 	}
@@ -46,6 +51,16 @@ public class PessoaService {
 			Pessoa entity = repository.getById(id);
 			entity.setNome(dto.getNome());
 			entity.setSobrenome(dto.getSobrenome());
+			
+			
+			Carro carro = carroRepository.getById(dto.getCarro().getId());
+			carro.setNome(dto.getCarro().getNome());
+			carro.setModelo(dto.getCarro().getModelo());
+			carro.setPessoa(entity);
+			carroRepository.save(carro);
+			
+			
+			entity.setCarro(carro);
 			entity = repository.save(entity);
 			return new PessoaDTO(entity);
 		} catch (EntityNotFoundException e) {

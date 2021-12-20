@@ -33,9 +33,12 @@ public class CarroService {
 		Carro entity = new Carro();
 		entity.setNome(dto.getNome());
 		entity.setModelo(dto.getModelo());
-		//Pessoa pessoa = pessoaRepository.getById(dto.getPessoaId());
-		//pessoaRepository.save(pessoa);
-		//entity.setPessoa(pessoa);
+		
+		Pessoa pessoa = new Pessoa();
+		pessoa.setCarro(entity);
+		pessoaRepository.save(pessoa);
+		
+		entity.setPessoa(pessoa);
 		entity = repository.save(entity);
 		return new CarroDTO(entity);
 	}
@@ -46,6 +49,11 @@ public class CarroService {
 			Carro entity = repository.getById(id);
 			entity.setNome(dto.getNome());
 			entity.setModelo(dto.getModelo());
+			
+			Pessoa pessoa = pessoaRepository.getById(dto.getPessoaId());
+			pessoaRepository.save(pessoa);
+			
+			entity.setPessoa(pessoa);
 			entity = repository.save(entity);
 			return new CarroDTO(entity);
 		} catch (EntityNotFoundException e) {
