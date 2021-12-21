@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -26,27 +27,26 @@ public class CarroService {
 	@Autowired
 	private CarroRepository repository;
 	@Autowired
+	
 	private PessoaRepository pessoaRepository;
+	@Autowired
+	private ModelMapper modelMapper;
 
 	@Transactional
 	public CarroDTO insert(CarroDTO dto) {
-		Carro entity = new Carro();
-		Pessoa pessoa = new Pessoa();
-		copiaEntidades(entity, pessoa, dto);
-
-		entity = repository.save(entity);
-		return new CarroDTO(entity);
+		Carro carro = new Carro();
+		copiaEntidade(carro, dto);		
+		carro = repository.save(carro);
+		return modelMapper.map(carro, CarroDTO.class);
 	}
 
 	@Transactional
 	public CarroDTO update(Long id, CarroDTO dto) {
 		try {
-			Carro entity = repository.getById(id);
-			Pessoa pessoa = pessoaRepository.getById(dto.getPessoaId());
-			copiaEntidades(entity, pessoa, dto);
-
-			entity = repository.save(entity);
-			return new CarroDTO(entity);
+			Carro carro = repository.getById(id);
+			copiaEntidade(carro, dto);	
+			carro = repository.save(carro);
+			return modelMapper.map(carro, CarroDTO.class);
 		} catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException("Carro não existe: " + id);
 		}
@@ -55,13 +55,13 @@ public class CarroService {
 	@Transactional(readOnly = true)
 	public List<CarroDTO> findAll() {
 		List<Carro> obj = repository.findAll(Sort.by("nome"));
-		return obj.stream().map(CarroDTO::new).collect(Collectors.toList());
+		return obj.stream().map(c -> modelMapper.map(c , CarroDTO.class)).collect(Collectors.toList());
 	}
 
 	@Transactional(readOnly = true)
 	public CarroDTO findById(Long id) {
 		Carro obj = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Carro não existe: " + id));
-		return new CarroDTO(obj);
+		return modelMapper.map(obj, CarroDTO.class);
 	}
 
 	public void delete(Long id) {
@@ -75,13 +75,13 @@ public class CarroService {
 
 		}
 	}
-
-	private void copiaEntidades(Carro entity, Pessoa pessoa, CarroDTO dto) {
-		entity.setNome(dto.getNome());
-		entity.setModelo(dto.getModelo());
-
-		pessoa.setCarro(entity);
+	
+	private void copiaEntidade(Carro carro, CarroDTO dto) {
+		modelMapper.map(dto, carro);
+		Pessoa pessoa = (carro.getPessoa() == null) ? new Pessoa()  : pessoaRepository.getById(carro.getPessoa().getId());
+		pessoa.setCarro(carro);
 		pessoaRepository.save(pessoa);
-		entity.setPessoa(pessoa);
+		carro.setPessoa(pessoa);	
 	}
+
 }

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -27,26 +28,24 @@ public class PessoaService {
 	private PessoaRepository repository;
 	@Autowired
 	private CarroRepository carroRepository;
+	@Autowired
+	private ModelMapper modelMapper;
 
 	@Transactional
 	public PessoaDTO insert(PessoaDTO dto) {
-		Pessoa entity = new Pessoa();
-		Carro carro = new Carro();
-		copiaEntidade(entity, carro, dto);
-
-		entity = repository.save(entity);
-		return new PessoaDTO(entity);
+		Pessoa pessoa = new Pessoa();	
+		copiaEntidade(pessoa, dto);
+		pessoa = repository.save(pessoa);
+		return modelMapper.map(pessoa, PessoaDTO.class);
 	}
 
 	@Transactional
 	public PessoaDTO update(Long id, PessoaDTO dto) {
 		try {
-			Pessoa entity = repository.getById(id);
-			Carro carro = carroRepository.getById(dto.getCarro().getId());
-			copiaEntidade(entity, carro, dto);
-
-			entity = repository.save(entity);
-			return new PessoaDTO(entity);
+			Pessoa pessoa = repository.getById(id);	
+			copiaEntidade(pessoa, dto);
+			pessoa = repository.save(pessoa);
+			return modelMapper.map(pessoa, PessoaDTO.class);
 		} catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException("Pessoa não existe: " + id);
 		}
@@ -55,14 +54,14 @@ public class PessoaService {
 	@Transactional(readOnly = true)
 	public List<PessoaDTO> findAll() {
 		List<Pessoa> obj = repository.findAll(Sort.by("nome"));
-		return obj.stream().map(p -> new PessoaDTO(p)).collect(Collectors.toList());
+		return obj.stream().map(p -> modelMapper.map(p, PessoaDTO.class)).collect(Collectors.toList());
 	}
 
 	@Transactional(readOnly = true)
 	public PessoaDTO findById(Long id) {
 		Pessoa obj = repository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Pessoa não existe: " + id));
-		return new PessoaDTO(obj);
+		return modelMapper.map(obj, PessoaDTO.class);
 	}
 
 	public void delete(Long id) {
@@ -75,16 +74,13 @@ public class PessoaService {
 			throw new DatabaseException("Pessoa não existe: " + id);
 		}
 	}
-
-	private void copiaEntidade(Pessoa entity, Carro carro, PessoaDTO dto) {
-		entity.setNome(dto.getNome());
-		entity.setSobrenome(dto.getSobrenome());
-
-		carro.setNome(dto.getCarro().getNome());
-		carro.setModelo(dto.getCarro().getModelo());
-		carro.setPessoa(entity);
+	
+	private void copiaEntidade(Pessoa pessoa, PessoaDTO dto) {
+		modelMapper.map(dto, pessoa);
+		Carro carro = (pessoa.getCarro().getId() == null) ? new Carro() : carroRepository.getById(pessoa.getCarro().getId());
+		carro.setPessoa(pessoa);
+		modelMapper.map(dto.getCarro(), carro); // mapeia o dto dos campos do objeto carro para a entidade carro
 		carroRepository.save(carro);
-
-		entity.setCarro(carro);
+		pessoa.setCarro(carro);	
 	}
 }
